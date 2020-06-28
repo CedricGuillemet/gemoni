@@ -70,6 +70,7 @@ static ImVec2 scrolling = ImVec2(0.0f, 0.0f);
 float factor = 1.0f;
 float factorTarget = 1.0f;
 ImVec2 captureOffset;
+static bool inTransaction = false;
 
 enum NodeOperation
 {
@@ -426,8 +427,11 @@ bool HandleConnections(ImDrawList* drawList,
                         auto& link = links[linkIndex];
                         if (link.mOutputNodeIndex == nl.mOutputNodeIndex && link.mOutputSlotIndex == nl.mOutputSlotIndex)
                         {
-                            if (!delegate->InTransaction())
+                            if (!inTransaction)
+                            {
                                 delegate->BeginTransaction(true);
+                                inTransaction = true;
+                            }
                             delegate->DelLink(linkIndex);
                             
                             break;
@@ -436,8 +440,11 @@ bool HandleConnections(ImDrawList* drawList,
 
                     if (!alreadyExisting)
                     {
-                        if (!delegate->InTransaction())
+                        if (!inTransaction)
+                        {
                             delegate->BeginTransaction(true);
+                            inTransaction = true;
+                        }
                         delegate->AddLink(nl.mInputNodeIndex, nl.mInputSlotIndex, nl.mOutputNodeIndex, nl.mOutputSlotIndex);
                     }
                 }
@@ -460,8 +467,11 @@ bool HandleConnections(ImDrawList* drawList,
                         auto& link = links[linkIndex];
                         if (link.mOutputNodeIndex == nodeIndex && link.mOutputSlotIndex == closestConn)
                         {
-                            if (!delegate->InTransaction())
+                            if (!inTransaction)
+                            {
                                 delegate->BeginTransaction(true);
+                                inTransaction = true;
+                            }
                             delegate->DelLink(linkIndex);
                             break;
                         }
@@ -470,9 +480,10 @@ bool HandleConnections(ImDrawList* drawList,
             }
         }
     }
-    if (nodeOperation == NO_EditingLink && delegate->InTransaction())
+    if (nodeOperation == NO_EditingLink && inTransaction)
     {
         delegate->EndTransaction();
+        inTransaction = false;
     }
     return hoverSlot;
 }
@@ -594,7 +605,7 @@ static bool DrawNode(ImDrawList* drawList,
     if (progress > FLT_EPSILON && progress < 1.f - FLT_EPSILON)
     {
         ImVec2 progressLineA = node_rect_max - ImVec2(nodeSize.x - 2.f, 3.f);
-        ImVec2 progressLineB = progressLineA + ImVec2(nodeSize.x * factor - 4.f, 0.f);
+        ImVec2 progressLineB = progressLineA + ImVec2(nodeSize.x - 4.f, 0.f);
         drawList->AddLine(progressLineA, progressLineB, 0xFF400000, 3.f);
         drawList->AddLine(progressLineA, ImLerp(progressLineA, progressLineB, progress), 0xFFFF0000, 3.f);
     }
@@ -692,7 +703,7 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
 
     const ImVec2 windowPos = ImGui::GetCursorScreenPos();
     const ImVec2 canvasSize = ImGui::GetWindowSize();
-    const ImVec2 scrollRegionLocalPos(0, 50);
+    const ImVec2 scrollRegionLocalPos(0, 0);
     const auto& nodes = delegate->GetNodes();
 
     bool openContextMenu = false;
@@ -758,10 +769,10 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
         for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
         {
             const auto* node = &nodes[nodeIndex];
-            //if (node->mbSelected != (i != 0))
+            /*if (node->mbSelected != (i != 0))
             {
                 continue;
-            }
+            }*/
 
             // node view clipping
             ImRect nodeRect = GetNodeRect(*node, factor);
@@ -796,9 +807,10 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
             ImVec2 delta = io.MouseDelta / factor;
             if (fabsf(delta.x) >= 1.f || fabsf(delta.y) >= 1.f)
             {
-                if (!delegate->InTransaction())
+                if (!inTransaction)
                 {
                     delegate->BeginTransaction(true);
+                    inTransaction = true;
                 }
                 delegate->MoveSelectedNodes(delta);
             }
@@ -823,9 +835,10 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
     else if (nodeOperation != NO_None && !io.MouseDown[0])
     {
         nodeOperation = NO_None;
-        if (delegate->InTransaction())
+        if (inTransaction)
         {
             delegate->EndTransaction();
+            inTransaction = false;
         }
     }
 

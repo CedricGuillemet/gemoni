@@ -985,9 +985,6 @@ void ImGui_Implbgfx_RenderDrawData(bgfx::ViewId viewId, ImDrawData* _drawData)
     const bgfx::Caps* caps = bgfx::getCaps();
     if (viewId == 0)
     {
-        //float ortho[16];
-        //bx::mtxOrtho(ortho, 0.0f, width, height, 0.0f, 0.0f, 1000.0f, 0.0f, caps->homogeneousDepth);
-        //bgfx::setViewTransform(viewId, NULL, ortho);
         bgfx::setViewRect(viewId, 0, 0, uint16_t(width), uint16_t(height) );
     }
     
@@ -1011,20 +1008,13 @@ void ImGui_Implbgfx_RenderDrawData(bgfx::ViewId viewId, ImDrawData* _drawData)
         bgfx::allocTransientIndexBuffer(&tib, numIndices);
 
         ImDrawVert* verts = (ImDrawVert*)tvb.data;
-        /*if (viewId == 0)
+
+        for (uint32_t v = 0; v < numVertices; v++)
         {
-            bx::memCopy(verts, drawList->VtxBuffer.begin(), numVertices * sizeof(ImDrawVert));
-        }
-        else
-        */
-        {
-            for (uint32_t v = 0; v < numVertices; v++)
-            {
-                verts[v].uv = drawList->VtxBuffer.begin()[v].uv;
-                verts[v].col = drawList->VtxBuffer.begin()[v].col;
-                verts[v].pos.x = drawList->VtxBuffer.begin()[v].pos.x - _drawData->DisplayPos.x;
-                verts[v].pos.y = drawList->VtxBuffer.begin()[v].pos.y - _drawData->DisplayPos.y;
-            }
+            verts[v].uv = drawList->VtxBuffer.begin()[v].uv;
+            verts[v].col = drawList->VtxBuffer.begin()[v].col;
+            verts[v].pos.x = drawList->VtxBuffer.begin()[v].pos.x - _drawData->DisplayPos.x;
+            verts[v].pos.y = drawList->VtxBuffer.begin()[v].pos.y - _drawData->DisplayPos.y;
         }
 
         ImDrawIdx* indices = (ImDrawIdx*)tib.data;
@@ -1085,11 +1075,12 @@ void ImGui_Implbgfx_RenderDrawData(bgfx::ViewId viewId, ImDrawData* _drawData)
     }
 }
 
-static int gViewIndex = 1;
+
 struct ImGuiViewportDataBgfx
 {
     bgfx::FrameBufferHandle frameBufferHandle;
     bgfx::ViewId viewIndex;
+    static int gViewIndex;
 
     ImGuiViewportDataBgfx() : frameBufferHandle{ bgfx::kInvalidHandle }, viewIndex(gViewIndex++)
     {
@@ -1099,6 +1090,7 @@ struct ImGuiViewportDataBgfx
         gViewIndex--;
     }
 };
+int ImGuiViewportDataBgfx::gViewIndex = 1;
 
 static void ImGui_ImplBgfx_CreateWindow(ImGuiViewport* viewport)
 {
@@ -1114,13 +1106,13 @@ static void ImGui_ImplBgfx_CreateWindow(ImGuiViewport* viewport)
 
 static void ImGui_ImplBgfx_DestroyWindow(ImGuiViewport* viewport)
 {
-    // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     if (ImGuiViewportDataBgfx* data = (ImGuiViewportDataBgfx*)viewport->RendererUserData)
     {
         if (bgfx::isValid(data->frameBufferHandle))
         {
             bgfx::destroy(data->frameBufferHandle);
         }
+        IM_DELETE(data);
     }
     viewport->RendererUserData = NULL;
 }

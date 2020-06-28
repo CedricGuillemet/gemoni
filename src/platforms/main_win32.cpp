@@ -909,6 +909,8 @@ int main(int, char**)
     ImGui_ImplWin32_Init(hwnd);
     ImGui_Implbgfx_Init();
 
+    UIInit();
+
     // Main loop
     MSG msg;
     ZeroMemory(&msg, sizeof(msg));

@@ -1,30 +1,31 @@
 #include "imgui.h"
 #include "GraphEditor.h"
-
+#include "Style.h"
 
 bool mbShowNodes = true;
 
+void UIInit()
+{
+    SetStyle();
+    InitFonts();
+}
 
 struct GEDelegate : public GraphEditorDelegate
 {
     //NodeIndex mSelectedNodeIndex{ InvalidNodeIndex };
-
+    GEDelegate()
+    {
+        nodes.push_back({"My Node", ImRect(ImVec2(0.f,0.f), ImVec2(200.f, 200.f)), 0xFFAAAAAA, 0xFF555555});
+    }
     // getters
     virtual ImVec2 GetEvaluationSize(NodeIndex nodeIndex) const { return ImVec2(150, 150); }
-    virtual int NodeIsProcesing(NodeIndex nodeIndex) const { return false; }
-    virtual float NodeProgress(NodeIndex nodeIndex) const { return 0.f; }
-    virtual bool NodeIsCubemap(NodeIndex nodeIndex) const { return false; }
-    virtual bool NodeIs2D(NodeIndex nodeIndex) const { return true; }
-    //virtual bool NodeIsCompute(NodeIndex nodeIndex) const { return false; }
-    //virtual bool IsIOPinned(NodeIndex nodeIndex, size_t io, bool forOutput) const = 0;
+    virtual float NodeProgress(NodeIndex nodeIndex) const { return 0.5f; }
+
     virtual bool RecurseIsLinked(NodeIndex from, NodeIndex to) const { return false; }
-    //virtual bgfx::TextureHandle GetBitmapInfo(NodeIndex nodeIndex) const = 0;
 
     virtual void DrawNodeImage(ImDrawList* drawList, const ImRect& rc, const ImVec2 marge, NodeIndex nodeIndex) {}
     virtual void ContextMenu(ImVec2 rightclickPos, ImVec2 worldMousePos, int nodeHovered) {}
 
-    // operations
-    virtual bool InTransaction() { return false; }
     virtual void BeginTransaction(bool undoable) {}
     virtual void EndTransaction() {}
 
@@ -33,29 +34,11 @@ struct GEDelegate : public GraphEditorDelegate
     virtual void AddLink(NodeIndex inputNodeIndex, SlotIndex inputSlotIndex, NodeIndex outputNodeIndex, SlotIndex outputSlotIndex) {}
     virtual void DelLink(size_t linkIndex) {}
 
-    // return false if background must be rendered by node graph
-    //virtual bool RenderBackground() = 0;
-
-    struct Node
+    virtual const std::vector<GraphEditorDelegate::Node>& GetNodes() const
     {
-        const char* mName;
-        ImRect mRect;
-        uint32_t mHeaderColor;
-        uint32_t mBackgroundColor;
-        std::vector<const char*> mInputs;
-        std::vector<const char*> mOutputs;
-        bool mbSelected;
-    };
-
-    struct Link
-    {
-        int mInputNodeIndex, mInputSlotIndex, mOutputNodeIndex, mOutputSlotIndex;
-    };
-
-    // node/links/rugs retrieval
-    virtual const std::vector<GraphEditorDelegate::Node>& GetNodes() const {
         return nodes;
     }
+
     virtual const std::vector<GraphEditorDelegate::Link>& GetLinks() const
     {
         return links;

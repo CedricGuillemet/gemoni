@@ -8,8 +8,6 @@ if(APPLE)
     # no Vulkan on Apple but Metal
     add_compile_definitions(BGFX_CONFIG_RENDERER_VULKAN=0)
     add_compile_definitions(BGFX_CONFIG_RENDERER_METAL=1)
-elseif(ANDROID)
-    add_compile_definitions(BGFX_CONFIG_RENDERER_OPENGLES=30)
 elseif(UNIX)
     add_compile_definitions(BGFX_CONFIG_RENDERER_OPENGL=33)
 endif()
