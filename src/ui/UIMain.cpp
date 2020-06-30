@@ -1,6 +1,7 @@
 #include "imgui.h"
 #include "GraphEditor.h"
 #include "Style.h"
+#include <algorithm>
 
 bool mbShowNodes = true;
 
@@ -15,7 +16,11 @@ struct GEDelegate : public GraphEditorDelegate
     //NodeIndex mSelectedNodeIndex{ InvalidNodeIndex };
     GEDelegate()
     {
-        nodes.push_back({"My Node", ImRect(ImVec2(0.f,0.f), ImVec2(200.f, 200.f)), 0xFFAAAAAA, 0xFF555555});
+        mNodes.push_back({"My Node", ImRect(ImVec2(0.f,0.f), ImVec2(200.f, 200.f)), 0xFFAAAAAA, 0xFF555555});
+        mNodes.push_back({ "My Node", ImRect(ImVec2(300.f,0.f), ImVec2(300 + 200.f, 200.f)), 0xFFAAAAAA, 0xFF555555 });
+        mNodes.push_back({ "My Node", ImRect(ImVec2(600.f,0.f), ImVec2(600 + 200.f, 200.f)), 0xFFAAAAAA, 0xFF555555 });
+        mNodes.push_back({ "My Node", ImRect(ImVec2(900.f,0.f), ImVec2(900 + 200.f, 200.f)), 0xFFAAAAAA, 0xFF555555 });
+        mNodes.push_back({ "My Node", ImRect(ImVec2(1200.f,0.f), ImVec2(1200 + 200.f, 200.f)), 0xFFAAAAAA, 0xFF555555 });
     }
     // getters
     virtual ImVec2 GetEvaluationSize(NodeIndex nodeIndex) const { return ImVec2(150, 150); }
@@ -29,27 +34,69 @@ struct GEDelegate : public GraphEditorDelegate
     virtual void BeginTransaction(bool undoable) {}
     virtual void EndTransaction() {}
 
-    virtual void MoveSelectedNodes(const ImVec2 delta) {}
+    virtual void MoveNodes(std::vector<NodeIndex>& nodes, const ImVec2 delta)
+    {
+        for (auto nodeIndex : nodes)
+        {
+            mNodes[nodeIndex].mRect.Min += delta;
+            mNodes[nodeIndex].mRect.Max += delta;
+        }
+    }
+    
+    virtual void CopyNodes(std::vector<NodeIndex>& nodes)
+    {
+        for (auto nodeIndex : nodes)
+        {
+            mClipboard.push_back(mNodes[nodeIndex]);
+        }
+    }
+    
+    virtual void DeleteNodes(std::vector<NodeIndex>& nodes)
+    {
+        std::vector<NodeIndex> sortedIndices = nodes;
+        std::sort(sortedIndices.begin(), sortedIndices.end());
+        std::reverse(sortedIndices.begin(), sortedIndices.end());
+        for (auto nodeIndex : sortedIndices)
+        {
+            mNodes.erase(mNodes.begin() + nodeIndex);
+        }
+    }
+
+    virtual std::vector<NodeIndex> PasteNodes(const ImVec2 offset)
+    {
+        std::vector<NodeIndex> pastedNodeIndex;
+        for (auto& node : mClipboard)
+        {
+            pastedNodeIndex.push_back(NodeIndex(mNodes.size()));
+            mNodes.push_back(node);
+            mNodes.back().mRect.Min += offset;
+            mNodes.back().mRect.Max += offset;
+        }
+        return pastedNodeIndex;
+    }
+
 
     virtual void AddLink(NodeIndex inputNodeIndex, SlotIndex inputSlotIndex, NodeIndex outputNodeIndex, SlotIndex outputSlotIndex) {}
     virtual void DelLink(size_t linkIndex) {}
 
     virtual const std::vector<GraphEditorDelegate::Node>& GetNodes() const
     {
-        return nodes;
+        return mNodes;
     }
 
     virtual const std::vector<GraphEditorDelegate::Link>& GetLinks() const
     {
-        return links;
+        return mLinks;
     }
 
-    std::vector<GraphEditorDelegate::Node> nodes;
-    std::vector<GraphEditorDelegate::Link> links;
+    std::vector<GraphEditorDelegate::Node> mNodes;
+    std::vector<GraphEditorDelegate::Link> mLinks;
+
+    std::vector<GraphEditorDelegate::Node> mClipboard;
 };
 void ShowNodeGraph()
 {
-    GEDelegate gedelegate;
+    static GEDelegate gedelegate;
     GraphEditor(&gedelegate, true/*mSelectedMaterial != -1*/);
 }
 
@@ -71,7 +118,7 @@ void UIMain()
 
     // MAGIC numbers!
     const ImVec2 windowPos = ImGui::GetCursorScreenPos() - ImVec2(68,86);
-    const ImVec2 canvasSize = io.DisplaySize - ImVec2(1,1);
+    const ImVec2 canvasSize = io.DisplaySize - ImVec2(2,2);
     ImGui::SetNextWindowPos(windowPos);
     ImGui::SetNextWindowSize(canvasSize);
     ImGui::Begin("MyDockspace"

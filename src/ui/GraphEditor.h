@@ -35,8 +35,6 @@ typedef unsigned int SlotIndex;
 
 struct GraphEditorDelegate
 {
-	//NodeIndex mSelectedNodeIndex{ InvalidNodeIndex };
-
     // getters
     virtual ImVec2 GetEvaluationSize(NodeIndex nodeIndex) const = 0;
     virtual float NodeProgress(NodeIndex nodeIndex) const = 0;
@@ -49,7 +47,10 @@ struct GraphEditorDelegate
     virtual void BeginTransaction(bool undoable) = 0;
     virtual void EndTransaction() = 0;
 
-    virtual void MoveSelectedNodes(const ImVec2 delta) = 0;
+    virtual void MoveNodes(std::vector<NodeIndex>& nodes, const ImVec2 delta) = 0;
+    virtual void CopyNodes(std::vector<NodeIndex>& nodes) = 0;
+    virtual void DeleteNodes(std::vector<NodeIndex>& nodes) = 0;
+    virtual std::vector<NodeIndex> PasteNodes(const ImVec2 offset) = 0;
     
     virtual void AddLink(NodeIndex inputNodeIndex, SlotIndex inputSlotIndex, NodeIndex outputNodeIndex, SlotIndex outputSlotIndex) = 0;
     virtual void DelLink(size_t linkIndex) = 0;

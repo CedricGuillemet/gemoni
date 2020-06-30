@@ -29,6 +29,8 @@
 #include <vector>
 #include <float.h>
 #include <array>
+#include <set>
+#include <map>
 #include "GraphEditor.h"
 
 static inline float Distance(ImVec2& a, ImVec2& b)
@@ -48,6 +50,7 @@ ImVec2 GetInputSlotPos(const GraphEditorDelegate::Node& node, int slot_no, float
     return ImVec2(node.mRect.Min.x * factor,
                   node.mRect.Min.y * factor + Size.y * ((float)slot_no + 1) / ((float)InputsCount + 1) + 8.f);
 }
+
 ImVec2 GetOutputSlotPos(const GraphEditorDelegate::Node& node, int slot_no, float factor)
 {
     ImVec2 Size = node.mRect.GetSize() * factor;
@@ -55,14 +58,15 @@ ImVec2 GetOutputSlotPos(const GraphEditorDelegate::Node& node, int slot_no, floa
     return ImVec2(node.mRect.Min.x * factor + Size.x,
                   node.mRect.Min.y * factor + Size.y * ((float)slot_no + 1) / ((float)OutputsCount + 1) + 8.f);
 }
+
 ImRect GetNodeRect(const GraphEditorDelegate::Node& node, float factor)
 {
     ImVec2 Size = node.mRect.GetSize() * factor;
     return ImRect(node.mRect.Min * factor, node.mRect.Min * factor + Size);
 }
 
-const float NODE_SLOT_RADIUS = 8.0f;
-const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
+static const float NODE_SLOT_RADIUS = 8.0f;
+static const ImVec2 NODE_WINDOW_PADDING(8.0f, 8.0f);
 
 static ImVec2 editingNodeSource;
 bool editingInput = false;
@@ -71,7 +75,8 @@ float factor = 1.0f;
 float factorTarget = 1.0f;
 ImVec2 captureOffset;
 static bool inTransaction = false;
-
+static std::set<int> selectedNodes;
+ImVec2 movingNodesOffset;
 enum NodeOperation
 {
     NO_None,
@@ -82,6 +87,54 @@ enum NodeOperation
     NO_PanView,
 };
 NodeOperation nodeOperation = NO_None;
+
+void GraphEditorClear()
+{
+    nodeOperation = NO_None;
+    factor = 1.0f;
+    factorTarget = 1.0f;
+    selectedNodes.clear();
+}
+
+std::vector<NodeIndex> GetSelectedNodes()
+{
+    std::vector<NodeIndex> res;
+    for (auto selectedNodeIndex : selectedNodes)
+    {
+        res.push_back(selectedNodeIndex);
+    }
+    return res;
+}
+
+void UnSelectNodes()
+{
+    selectedNodes.clear();
+}
+
+bool IsNodeSelected(int nodeIndex)
+{
+    return std::find(selectedNodes.begin(), selectedNodes.end(), nodeIndex) != selectedNodes.end();
+}
+
+void SelectNode(int nodeIndex, bool selected)
+{
+    auto iter = std::find(selectedNodes.begin(), selectedNodes.end(), nodeIndex);
+    if (iter != selectedNodes.end())
+    {
+        if (!selected)
+        {
+            selectedNodes.erase(iter);
+        }
+
+    }
+    else
+    {
+        if (selected)
+        {
+            selectedNodes.insert(nodeIndex);
+        }
+    }
+}
 
 void HandleZoomScroll(ImRect regionRect)
 {
@@ -104,13 +157,6 @@ void HandleZoomScroll(ImRect regionRect)
     {
         scrolling += mouseWPosPost - mouseWPosPre;
     }
-}
-
-void GraphEditorClear()
-{
-    nodeOperation = NO_None;
-    factor = 1.0f;
-    factorTarget = 1.0f;
 }
 
 void GraphEditorUpdateScrolling(GraphEditorDelegate *delegate)
@@ -275,12 +321,7 @@ static void HandleQuadSelection(
         {
             if (!io.KeyCtrl && !io.KeyShift)
             {
-                /*
-                for (int nodeIndex = 0; nodeIndex < nodes.size(); nodeIndex++)
-                {
-                    delegate->SelectNode(nodeIndex, false);
-                }
-                */
+                UnSelectNodes();
             }
 
             nodeOperation = NO_None;
@@ -292,25 +333,21 @@ static void HandleQuadSelection(
                 ImVec2 node_rect_max = node_rect_min + node->mRect.GetSize() * factor;
                 if (selectionRect.Overlaps(ImRect(node_rect_min, node_rect_max)))
                 {
-                    /*
                     if (io.KeyCtrl)
                     {
-                        delegate->SelectNode(nodeIndex, false);
+                        SelectNode(nodeIndex, false);
                     }
                     else
                     {
-                        delegate->SelectNode(nodeIndex, true);
+                        SelectNode(nodeIndex, true);
                     }
-                    */
                 }
                 else
                 {
-                    /*
                     if (!io.KeyShift)
                     {
-                        delegate->SelectNode(nodeIndex, false);
+                        SelectNode(nodeIndex, false);
                     }
-                    */
                 }
             }
         }
@@ -323,6 +360,61 @@ static void HandleQuadSelection(
     }
 }
 
+static int gvalue = 0;
+void HandleCopyCutPasteDelete(GraphEditorDelegate* delegate)
+{
+    ImGuiIO& io = ImGui::GetIO();
+    static bool armed = true;
+
+    bool keyC = ImGui::IsKeyPressed(io.KeyMap[ImGuiKey_C], false);
+    bool keyV = ImGui::IsKeyPressed(io.KeyMap[ImGuiKey_V], false);
+    bool keyX = ImGui::IsKeyPressed(io.KeyMap[ImGuiKey_X], false);
+    bool keyDel = ImGui::IsKeyPressed(io.KeyMap[ImGuiKey_Delete], false);
+
+    if (!keyC && !keyV && !keyDel && !keyX)
+    {
+        armed = true;
+    }
+
+    if (!armed)
+    {
+        return;
+    }
+
+    if (keyC || keyV || keyDel || keyX)
+    {
+        armed = false;
+    }
+
+    if (io.KeyCtrl && keyC)
+    {
+        auto nodes = GetSelectedNodes();
+        delegate->CopyNodes(nodes);
+        
+    }
+    if (io.KeyCtrl && keyX)
+    {
+        auto nodes = GetSelectedNodes();
+        delegate->CopyNodes(nodes);
+        delegate->DeleteNodes(nodes);
+        UnSelectNodes();
+    }
+    if (io.KeyCtrl && keyV)
+    {
+        auto pastedNodes = delegate->PasteNodes(ImVec2(40.f, 40.f));
+        UnSelectNodes();
+        for (auto nodeIndex : pastedNodes)
+        {
+            SelectNode(nodeIndex, true);
+        }
+    }
+    if (keyDel)
+    {
+        auto nodes = GetSelectedNodes();
+        delegate->DeleteNodes(nodes);
+        UnSelectNodes();
+    }
+}
 
 bool HandleConnections(ImDrawList* drawList,
                        int nodeIndex,
@@ -336,6 +428,9 @@ bool HandleConnections(ImDrawList* drawList,
     const auto& links = delegate->GetLinks();
     const auto& nodes = delegate->GetNodes();
 
+    
+    HandleCopyCutPasteDelete(delegate);
+    
     ImGuiIO& io = ImGui::GetIO();
     const GraphEditorDelegate::Node* node = &nodes[nodeIndex];
 
@@ -510,11 +605,19 @@ static bool DrawNode(ImDrawList* drawList,
     const auto& nodes = delegate->GetNodes();
     const auto* node = &nodes[nodeIndex];
 
-    const ImVec2 node_rect_min = offset + node->mRect.Min * factor;
+    ImRect nodeRect = node->mRect;
+    auto iter = std::find(selectedNodes.begin(), selectedNodes.end(), nodeIndex);
+    if (iter != selectedNodes.end())
+    {
+        nodeRect.Min += movingNodesOffset;
+        nodeRect.Max += movingNodesOffset;
+    }
+
+    const ImVec2 node_rect_min = offset + nodeRect.Min * factor;
 
     const bool old_any_active = ImGui::IsAnyItemActive();
     ImGui::SetCursorScreenPos(node_rect_min + NODE_WINDOW_PADDING);
-    const ImVec2 nodeSize = node->mRect.GetSize() * factor;
+    const ImVec2 nodeSize = nodeRect.GetSize() * factor;
 
     // test nested IO
     drawList->ChannelsSetCurrent(1); // Background
@@ -562,18 +665,17 @@ static bool DrawNode(ImDrawList* drawList,
     {
         if (node_widgets_active || node_moving_active)
         {
-            /*if (!node->mbSelected)
+            if (!IsNodeSelected(nodeIndex))
             {
                 if (!io.KeyShift)
                 {
                     for (auto i = 0; i < nodes.size(); i++)
                     {
-                        delegate->SelectNode(i, false);
+                        SelectNode(i, false);
                     }
                 }
-                delegate->SelectNode(nodeIndex, true);
+                SelectNode(nodeIndex, true);
             }
-            */
         }
     }
     if (node_moving_active && io.MouseDown[0] && nodeHovered)
@@ -584,7 +686,7 @@ static bool DrawNode(ImDrawList* drawList,
         }
     }
 
-    bool currentSelectedNode = false;//node->mbSelected;
+    bool currentSelectedNode = IsNodeSelected(nodeIndex);
 
 
     ImU32 node_bg_color = node->mBackgroundColor + (nodeHovered?0x191919:0);
@@ -804,16 +906,7 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
     {
         if (ImGui::IsMouseDragging(0, 1))
         {
-            ImVec2 delta = io.MouseDelta / factor;
-            if (fabsf(delta.x) >= 1.f || fabsf(delta.y) >= 1.f)
-            {
-                if (!inTransaction)
-                {
-                    delegate->BeginTransaction(true);
-                    inTransaction = true;
-                }
-                delegate->MoveSelectedNodes(delta);
-            }
+            movingNodesOffset += io.MouseDelta / factor;
         }
     }
 
@@ -835,10 +928,11 @@ void GraphEditor(GraphEditorDelegate* delegate, bool enabled)
     else if (nodeOperation != NO_None && !io.MouseDown[0])
     {
         nodeOperation = NO_None;
-        if (inTransaction)
+        if (fabsf(movingNodesOffset.x) > FLT_EPSILON || fabsf(movingNodesOffset.y) > FLT_EPSILON)
         {
-            delegate->EndTransaction();
-            inTransaction = false;
+            std::vector<NodeIndex> movedNodes = GetSelectedNodes();
+            delegate->MoveNodes(movedNodes, movingNodesOffset);
+            movingNodesOffset = ImVec2(0.f, 0.f);
         }
     }
 
