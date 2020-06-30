@@ -1,5 +1,5 @@
 #import "ViewController.h"
-#import "Renderer.h"
+//#import "Renderer.h"
 #include "imgui.h"
 
 #if TARGET_OS_OSX
@@ -8,7 +8,7 @@
 
 @interface ViewController ()
 @property (nonatomic, readonly) MTKView *mtkView;
-@property (nonatomic, strong) Renderer *renderer;
+//@property (nonatomic, strong) Renderer *renderer;
 @end
 
 @implementation ViewController
@@ -27,13 +27,13 @@
         NSLog(@"Metal is not supported");
         abort();
     }
-
+/*
     self.renderer = [[Renderer alloc] initWithView:self.mtkView];
 
     [self.renderer mtkView:self.mtkView drawableSizeWillChange:self.mtkView.bounds.size];
 
     self.mtkView.delegate = self.renderer;
-
+*/
 #if TARGET_OS_OSX
     // Add a tracking area in order to receive mouse events whenever the mouse is within the bounds of our view
     NSTrackingArea *trackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect

@@ -2,6 +2,7 @@
 file(GLOB SRC_FILES
     *.h
     *.cpp
+    *.mm
 )
 
 add_library(imgui ${SRC_FILES})

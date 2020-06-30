@@ -37,7 +37,7 @@ inline bool checkAvailTransientBuffers(uint32_t _numVertices, const bgfx::Vertex
         ;
 }
 
-void ImGui_ImplBgfx_InitPlatformInterface();
+static void ImGui_ImplBgfx_InitPlatformInterface();
 
 static const uint8_t vs_ocornut_imgui_glsl[527] =
 {
