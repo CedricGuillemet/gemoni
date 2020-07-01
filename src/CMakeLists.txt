@@ -46,7 +46,7 @@ if(APPLE)
             FOLDER "Gemoni")
 endif()
 
-target_link_libraries(Gemoni imgui bgfx bx bimg imwidgets stb ui RapidJSON)
+target_link_libraries(Gemoni imgui bgfx bx bimg imwidgets stb ui)
 include_directories("${CMAKE_SOURCE_DIR}/ext/rapidjson/include")
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
