@@ -13,10 +13,11 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - lcov
-            - g++-7
+          - lcov
+            - g++-9
+            - libgl1-mesa-dev 
       env:
-        - MATRIX_EVAL="CXX_COMPILER=g++-7; sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-7 90"
+        - MATRIX_EVAL="CXX_COMPILER=g++-9; sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-9 90"
 
     - os: osx
       osx_image: xcode10.1
@@ -47,6 +48,6 @@ after_success:
   - cd $PARENTDIR/build
   - lcov --list coverage_out.info.cleaned  # Show test report in travis log.
   # Install coverals gem for uploading coverage to coveralls.
-  - gem install coveralls-lcov
-  - coveralls-lcov coverage_out.info.cleaned  # uploads to coveralls
-  - bash <(curl -s https://codecov.io/bash) -f coverage_out.info.cleaned || echo "Codecov did not collect coverage reports"
+  #- gem install coveralls-lcov
+  #- coveralls-lcov coverage_out.info.cleaned  # uploads to coveralls
+  #- bash <(curl -s https://codecov.io/bash) -f coverage_out.info.cleaned || echo "Codecov did not collect coverage reports"
