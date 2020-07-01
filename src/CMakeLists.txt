@@ -1,22 +1,21 @@
 
 if(WIN32)
-  
-set(SRC_FILES
-    "platforms/main_win32.cpp")
-    
+    set(SRC_FILES
+        "platforms/main_win32.cpp")
 elseif(APPLE)
-
-set(SRC_FILES
-    "platforms/main.m"
-    "platforms/AppDelegate.h"
-    "platforms/AppDelegate.m"
-    "platforms/ViewController.h"
-    "platforms/ViewController.mm"
-    "platforms/main_osx.mm"
-    "platforms/main_osx.h")
-
+    set(SRC_FILES
+        "platforms/main.m"
+        "platforms/AppDelegate.h"
+        "platforms/AppDelegate.m"
+        "platforms/ViewController.h"
+        "platforms/ViewController.mm"
+        "platforms/main_osx.mm"
+        "platforms/main_osx.h")
+elseif(__linux__)
+    set(SRC_FILES
+        "platforms/main_x11.cpp")
 else()
-
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
 if(APPLE)
@@ -36,6 +35,7 @@ if(APPLE)
             RESOURCE "${RESOURCE_FILES}"
             FOLDER "Gemoni")
 endif()
+
 target_link_libraries(Gemoni imgui bgfx bx bimg imwidgets stb ui)
 
 set_target_properties(Gemoni PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
