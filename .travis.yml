@@ -1,19 +1,52 @@
-name: build
+language: cpp
+dist: xenial
+notifications:
+  email: false
 
-jobs:
-  Windows:
-    runs-on: windows-2019
+# Define builds on mulitple OS/compiler combinations. 
+# Feel free to add/remove entries from this list.
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - lcov
+            - g++-7
+      env:
+        - MATRIX_EVAL="CXX_COMPILER=g++-7; sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-7 90"
 
-steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
+    - os: osx
+      osx_image: xcode10.1
+      addons:
+        homebrew:
+          packages:
+          - lcov
+          update: true
 
-      - name: Install Dependencies
-      shell: powershell
-        run: |
-        git submodule update --init --recursive
+      env:
+        - MATRIX_EVAL="CXX_COMPILER=clang++"
+    
 
-      - name: Build Win32
-        run: |
-        cmake .
+before_install:
+  - eval "${MATRIX_EVAL}"
+  - PARENTDIR=$(pwd)
+  - mkdir $PARENTDIR/build
+
+install: 
+  - cd $PARENTDIR/build
+  - cmake $PARENTDIR -DCMAKE_BUILD_TYPE=Coverage -DCMAKE_CXX_COMPILER=$CXX_COMPILER
+  - make
+
+script:
+  - make coverage
+
+after_success:
+  - cd $PARENTDIR/build
+  - lcov --list coverage_out.info.cleaned  # Show test report in travis log.
+  # Install coverals gem for uploading coverage to coveralls.
+  - gem install coveralls-lcov
+  - coveralls-lcov coverage_out.info.cleaned  # uploads to coveralls
+  - bash <(curl -s https://codecov.io/bash) -f coverage_out.info.cleaned || echo "Codecov did not collect coverage reports"
