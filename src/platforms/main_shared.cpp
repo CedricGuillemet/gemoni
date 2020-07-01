@@ -10,7 +10,7 @@ void ImGui_ImplWin32_NewFrame();
 void ImGui_ImplWin32_Shutdown();
 #endif
 
-void PlaformInit(void* window)
+void PlatformInit(void* window)
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
