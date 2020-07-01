@@ -45,8 +45,8 @@ matrix:
         - PARENTDIR=$(pwd)
         - mkdir $PARENTDIR/build
         - cd $PARENTDIR/build
-        - cmake $PARENTDIR -G "NMake Makefiles"
-        - nmake
+        - cmake $PARENTDIR
+        - devenv Gemoni.sln /build
 
 after_success:
   - cd $PARENTDIR/build
