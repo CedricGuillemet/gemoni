@@ -23,4 +23,3 @@ steps:
       - name: Build Win32
         run: |
         cmake .
-        
