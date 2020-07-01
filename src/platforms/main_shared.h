@@ -1,5 +1,5 @@
 #pragma once
 
-void PlaformInit(void* window);
+void PlatformInit(void* window);
 void PlatformFrame();
 void PlatformFinalize();

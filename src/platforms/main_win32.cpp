@@ -864,7 +864,7 @@ int main(int, char**)
     ::RegisterClassEx(&wc);
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Gemoni"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
-    PlaformInit(hwnd);
+    PlatformInit(hwnd);
 
     // Show the window
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
