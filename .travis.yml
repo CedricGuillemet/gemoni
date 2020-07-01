@@ -42,11 +42,11 @@ install:
   #- make
 
 script:
-  - make coverage
+  - make
 
 after_success:
   - cd $PARENTDIR/build
-  - lcov --list coverage_out.info.cleaned  # Show test report in travis log.
+  #- lcov --list coverage_out.info.cleaned  # Show test report in travis log.
   # Install coverals gem for uploading coverage to coveralls.
   #- gem install coveralls-lcov
   #- coveralls-lcov coverage_out.info.cleaned  # uploads to coveralls
