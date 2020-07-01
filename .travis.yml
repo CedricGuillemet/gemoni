@@ -46,12 +46,7 @@ matrix:
         - mkdir $PARENTDIR/build
         - cd $PARENTDIR/build
         - cmake $PARENTDIR
-        - devenv Gemoni.sln /build
+        - cmake --build . --config Release
 
 after_success:
   - cd $PARENTDIR/build
-  #- lcov --list coverage_out.info.cleaned  # Show test report in travis log.
-  # Install coverals gem for uploading coverage to coveralls.
-  #- gem install coveralls-lcov
-  #- coveralls-lcov coverage_out.info.cleaned  # uploads to coveralls
-  #- bash <(curl -s https://codecov.io/bash) -f coverage_out.info.cleaned || echo "Codecov did not collect coverage reports"
