@@ -10,6 +10,12 @@ void ImGui_ImplWin32_NewFrame();
 void ImGui_ImplWin32_Shutdown();
 #endif
 
+#ifdef __linux__
+bool ImGui_ImplX11_Init(void* hwnd);
+void ImGui_ImplX11_NewFrame();
+void ImGui_ImplX11_Shutdown();
+#endif
+
 void PlatformInit(void* window)
 {
     // Setup Dear ImGui context
@@ -31,7 +37,9 @@ void PlatformInit(void* window)
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-
+    
+    UIInit();
+    
     bgfx::Init init;
     //init.type = commandLineParameters.mRenderAPI;
     //bgfxCallback callback;
@@ -48,6 +56,9 @@ void PlatformInit(void* window)
 #ifdef WIN32
     ImGui_ImplWin32_Init(window);
 #endif
+#ifdef __linux__
+    ImGui_ImplX11_Init(window);
+#endif
     ImGui_Implbgfx_Init();
 }
 
@@ -60,6 +71,9 @@ void PlatformFrame()
     ImGui_Implbgfx_NewFrame();
 #ifdef WIN32
     ImGui_ImplWin32_NewFrame();
+#endif
+#ifdef __linux__
+    ImGui_ImplX11_NewFrame();
 #endif
     ImGui::NewFrame();
 
@@ -88,6 +102,9 @@ void PlatformFinalize()
     ImGui_Implbgfx_Shutdown();
 #ifdef WIN32
     ImGui_ImplWin32_Shutdown();
+#endif
+#ifdef __linux__
+    ImGui_ImplX11_Shutdown();
 #endif
     ImGui::DestroyContext();
 
