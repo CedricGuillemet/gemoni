@@ -1,25 +1,4 @@
-name: build
-
-on:
-  push: {}
-  pull_request: {}
-  schedule:
-    - cron:  '0 9 * * *'
-
-jobs:
-  Windows:
-    runs-on: windows-2019
-    
-steps:
-      - uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-
-      - name: Install Dependencies
-      shell: powershell
-        run: |
-        git submodule update --init --recursive
-        
-      - name: Build Win32
-        run: |
-        cmake .
+language: ruby
+rvm:
+ - 2.2
+ - jruby
