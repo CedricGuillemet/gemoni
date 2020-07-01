@@ -31,4 +31,3 @@ set_property(TARGET bx PROPERTY FOLDER Dependencies/bgfx)
 add_subdirectory(imgui)
 add_subdirectory(imwidgets)
 add_subdirectory(stb)
-

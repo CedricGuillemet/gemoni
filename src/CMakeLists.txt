@@ -2,6 +2,12 @@ set(SRC_SHARED_FILES
     "platforms/main_shared.cpp"
     "platforms/main_shared.h")
 
+file(GLOB SRC_MODEL_FILES
+    model/*.h
+    model/*.cpp
+)
+
+
 if(WIN32)
     set(SRC_FILES
         "platforms/main_win32.cpp")
@@ -29,7 +35,7 @@ if(APPLE)
 endif()
 
 add_subdirectory(ui)
-add_executable(Gemoni ${SRC_FILES} ${SRC_SHARED_FILES} ${RESOURCE_FILES})
+add_executable(Gemoni ${SRC_FILES} ${SRC_SHARED_FILES} ${SRC_MODEL_FILES} ${RESOURCE_FILES})
 
 if(APPLE)
     set_target_properties(Gemoni PROPERTIES
@@ -40,7 +46,9 @@ if(APPLE)
             FOLDER "Gemoni")
 endif()
 
-target_link_libraries(Gemoni imgui bgfx bx bimg imwidgets stb ui)
+target_link_libraries(Gemoni imgui bgfx bx bimg imwidgets stb ui RapidJSON)
+include_directories("${CMAKE_SOURCE_DIR}/ext/rapidjson/include")
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 set_target_properties(Gemoni PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin )
 set_target_properties(Gemoni PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin )
