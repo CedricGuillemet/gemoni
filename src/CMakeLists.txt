@@ -11,11 +11,12 @@ elseif(APPLE)
         "platforms/ViewController.mm"
         "platforms/main_osx.mm"
         "platforms/main_osx.h")
-elseif(__linux__)
+#elseif(LINUX)
+else()
     set(SRC_FILES
         "platforms/main_x11.cpp")
-else()
-    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+#else()
+#    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
 
 if(APPLE)

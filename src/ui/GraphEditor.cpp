@@ -31,6 +31,7 @@
 #include <array>
 #include <set>
 #include <map>
+#include <algorithm>
 #include "GraphEditor.h"
 
 static inline float Distance(ImVec2& a, ImVec2& b)

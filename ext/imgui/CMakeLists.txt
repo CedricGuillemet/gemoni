@@ -2,10 +2,15 @@
 file(GLOB SRC_FILES
     *.h
     *.cpp
-    *.mm
 )
 
-add_library(imgui ${SRC_FILES})
+if(APPLE)
+file(GLOB SRC_FILES_APPLE
+    *.mm
+)
+endif()
+
+add_library(imgui ${SRC_FILES} ${SRC_FILES_APPLE})
 target_include_directories(imgui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(imgui bgfx)
 

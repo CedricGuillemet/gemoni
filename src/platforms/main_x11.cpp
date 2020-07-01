@@ -40,7 +40,7 @@ void Init(Window window)
     //init.type = commandLineParameters.mRenderAPI;
     //bgfxCallback callback;
     //init.callback = &callback;
-    init.platformData.nwh = window;
+    init.platformData.nwh = (void*)window;
     bgfx::init(init);
     
     
@@ -55,10 +55,12 @@ void Init(Window window)
 
 void Frame()
 {
+    ImGuiIO& io = ImGui::GetIO();
+
     bgfx::touch(0);
     // Start the Dear ImGui frame
     ImGui_Implbgfx_NewFrame();
-    ImGui_ImplWin32_NewFrame();
+    //ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
         /*ImGui::Begin("Another Window");   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
@@ -178,7 +180,6 @@ int main(int _argc, const char* const* _argv)
             case ConfigureNotify:
                 {
                     const XConfigureEvent& xev = event.xconfigure;
-                    UpdateWindowSize(xev.width, xev.height);
                 }
                 break;
             case ButtonPress:
