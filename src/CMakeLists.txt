@@ -1,12 +1,17 @@
+set(SRC_VERSION_FILES
+    "version.h")
+    
 set(SRC_SHARED_FILES
     "platforms/main_shared.cpp"
     "platforms/main_shared.h")
 
 file(GLOB SRC_MODEL_FILES
     model/*.h
-    model/*.cpp
-)
+    model/*.cpp)
 
+file(GLOB SRC_PLUGIN_FILES
+    plugin/*.h
+    plugin/*.cpp)
 
 if(WIN32)
     set(SRC_FILES
@@ -35,7 +40,7 @@ if(APPLE)
 endif()
 
 add_subdirectory(ui)
-add_executable(Gemoni ${SRC_FILES} ${SRC_SHARED_FILES} ${SRC_MODEL_FILES} ${RESOURCE_FILES})
+add_executable(Gemoni ${SRC_FILES} ${SRC_SHARED_FILES} ${SRC_MODEL_FILES} ${RESOURCE_FILES} ${SRC_VERSION_FILES} ${SRC_PLUGIN_FILES})
 
 if(APPLE)
     set_target_properties(Gemoni PROPERTIES

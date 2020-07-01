@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <vector>
 #include <stdarg.h>
+#include <cstdio>
 
 static std::vector<LogOutput> outputs;
 void AddLogOutput(LogOutput output)
