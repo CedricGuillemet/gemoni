@@ -9,8 +9,8 @@
 //  [X] Platform: Multi-viewport support (multiple windows). Enable with 'io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable'.
 
 #include "imgui.h"
-#include "imgui_impl_bgfx.h"
-#include "UIMain.h"
+#include "main_shared.h"
+#include "bgfx/bgfx.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -95,7 +95,7 @@ bool    ImGui_ImplWin32_Init(void* hwnd)
     return true;
 }
 
-void    ImGui_ImplWin32_Shutdown()
+void ImGui_ImplWin32_Shutdown()
 {
     ImGui_ImplWin32_ShutdownPlatformInterface();
     g_hWnd = (HWND)0;
@@ -269,7 +269,7 @@ static void ImGui_ImplWin32_UpdateMonitors()
     g_WantUpdateMonitors = false;
 }
 
-void    ImGui_ImplWin32_NewFrame()
+void ImGui_ImplWin32_NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.Fonts->IsBuilt() && "Font atlas not built! It is generally built by the renderer back-end. Missing call to renderer _NewFrame() function? e.g. ImGui_ImplOpenGL3_NewFrame().");
@@ -864,52 +864,11 @@ int main(int, char**)
     ::RegisterClassEx(&wc);
     HWND hwnd = ::CreateWindow(wc.lpszClassName, _T("Gemoni"), WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
-    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
-    //io.ConfigViewportsNoAutoMerge = true;
-    //io.ConfigViewportsNoTaskBarIcon = true;
-    
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
-    
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsClassic();
-
-    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
-    ImGuiStyle& style = ImGui::GetStyle();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        style.WindowRounding = 0.0f;
-        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-    }
-
-    bgfx::Init init;
-    //init.type = commandLineParameters.mRenderAPI;
-    //bgfxCallback callback;
-    //init.callback = &callback;
-    init.platformData.nwh = hwnd;
-    bgfx::init(init);
+    PlaformInit(hwnd);
 
     // Show the window
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
     ::UpdateWindow(hwnd);
-
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x303030ff, 1.0f, 0);
-
-    bgfx::frame();
-
-    // Setup Platform/Renderer bindings
-    ImGui_ImplWin32_Init(hwnd);
-    ImGui_Implbgfx_Init();
-
-    UIInit();
 
     // Main loop
     MSG msg;
@@ -927,39 +886,10 @@ int main(int, char**)
             ::DispatchMessage(&msg);
             continue;
         }
-        bgfx::touch(0);
-        // Start the Dear ImGui frame
-        ImGui_Implbgfx_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
-
-            /*ImGui::Begin("Another Window");   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::End();*/
-        UIMain();
-        
-
-        // Rendering
-        ImGui::EndFrame();
-        
-        ImGui::Render();
-        ImGui_Implbgfx_RenderDrawData(0, ImGui::GetDrawData());
-        bgfx::frame();
-
-        // Update and Render additional Platform Windows
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();
-            ImGui::RenderPlatformWindowsDefault();
-        }
-
+        PlatformFrame();
     }
 
-    ImGui_Implbgfx_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
-
-    // Shutdown bgfx.
-    bgfx::shutdown();
+    PlatformFinalize();
 
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
