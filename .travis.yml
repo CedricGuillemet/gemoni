@@ -1,19 +1,17 @@
-language: cpp
+jobs:
+  Windows:
+    runs-on: windows-2019
 
-compiler:
-  - gcc
+steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
 
-before_script:
-  # create a build folder for the out-of-source build
-  - mkdir build
-  # switch to build directory
-  - cd build
-  # run cmake; here we assume that the project's
-  # top-level CMakeLists.txt is located at '..'
-  - cmake ..
+      - name: Install Dependencies
+      shell: powershell
+        run: |
+        git submodule update --init --recursive
 
-script:
-  # once CMake has done its job we just build using make as usual
-  - make
-  # if the project uses ctest we can run the tests like this
-  - make test
+      - name: Build Win32
+        run: |
+        cmake .
