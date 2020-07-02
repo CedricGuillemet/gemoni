@@ -1,5 +1,5 @@
 set(SRC_VERSION_FILES
-    "version.h")
+    "Version.h")
     
 set(SRC_SHARED_FILES
     "platforms/main_shared.cpp"
